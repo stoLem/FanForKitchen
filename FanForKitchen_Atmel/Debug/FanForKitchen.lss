@@ -52,12 +52,6 @@ Disassembly of section .text:
   20:	ef cf       	rjmp	.-34     	; 0x0 <__vectors>
 
 00000022 <main>:
-
-#include <avr/io.h>
-
-
-int main(void)
-{
   22:	ff cf       	rjmp	.-2      	; 0x22 <main>
 
 00000024 <_exit>:
