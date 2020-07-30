@@ -24,6 +24,7 @@ void setup() {
 }
 
 void loop() {
+  // опрос кнопок выбора режима работы
   if (digitalRead(btnMinPin) == 0){ // если переключатель скорости работы выбран на минимальную скорость 
     interrupts();
     DimCurrent = Dimm0;
@@ -33,6 +34,13 @@ void loop() {
   } else {
     interrupts();
     Dimm0 > 5 ? DimCurrent = Dimm0 - 5 : DimCurrent = 1;
+  }
+
+  // опрос кнопок изменения диммирования
+  if (digitalRead(btnSlowlyPin) == 0){  
+    if (DimCurrent > 1) DimCurrent--;
+  } else if (digitalRead(btnFasterPin)){
+    if (DimCurrent < 156) DimCurrent++;
   }
 }
 
