@@ -6,7 +6,7 @@
 #define btnMaxPin 5
 #include <core_timers.h>
 
-volatile uint8_t Dimmer; // 1 - 161
+volatile uint8_t Dimm0, DimCurrent; // 1 - 156
 
 void setup() {
   pinMode(dimPin, OUTPUT);
@@ -20,24 +20,27 @@ void setup() {
   pinMode(zeroPin, INPUT);                 // настраиваем порт на вход для отслеживания прохождения сигнала через ноль
   attachInterrupt(0, detect_up, RISING);   // настроить срабатывание прерывания на восходящий уровень
 
-  Dimmer = 50;
+  Dimm0 = 50;
 }
 
 void loop() {
-//  if (digitalRead(BTN1_PIN) == 0){
-//    if (Dimmer != 99) Dimmer = 99;
-//  } else if (digitalRead(BTN2_PIN) == 0){
-//    if (Dimmer != 0) Dimmer = 0;
-//  } else {
-//    if (Dimmer != 85) Dimmer = 85;
-//  }
+  if (digitalRead(btnMinPin) == 0){ // если переключатель скорости работы выбран на минимальную скорость 
+    interrupts();
+    DimCurrent = Dimm0;
+  } else if (digitalRead(btnMaxPin) == 0){
+    noInterrupts();
+    digitalWrite(dimPin, HIGH);
+  } else {
+    interrupts();
+    Dimm0 > 5 ? DimCurrent = Dimm0 - 5 : DimCurrent = 1;
+  }
 }
 
 //----------------------ОБРАБОТЧИКИ ПРЕРЫВАНИЙ--------------------------
 void detect_up() {    // обработка внешнего прерывания на пересекание нуля снизу                                                        
   digitalWrite(dimPin, LOW);
   
-  Timer0_SetOutputCompareMatchA(Dimmer);        
+  Timer0_SetOutputCompareMatchA(DimCurrent);        
   Timer0_EnableOutputCompareInterruptA();
   Timer0_ClockSelect(Timer0_Prescale_Value_1024);// запустить таймер
 }
