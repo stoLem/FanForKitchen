@@ -4,7 +4,9 @@
 #define btnFasterPin 3
 #define btnMinPin 4
 #define btnMaxPin 5
+
 #include <core_timers.h>
+#include <avr/eeprom.h>
 
 volatile uint8_t Dimm0, DimCurrent; // 1 - 156
 
@@ -20,7 +22,7 @@ void setup() {
   pinMode(zeroPin, INPUT);                 // настраиваем порт на вход для отслеживания прохождения сигнала через ноль
   attachInterrupt(0, detect_up, RISING);   // настроить срабатывание прерывания на восходящий уровень
 
-  Dimm0 = 50;
+  Dimm0 = eeprom_read_byte(0);
 }
 
 void loop() {
@@ -28,19 +30,25 @@ void loop() {
   if (digitalRead(btnMinPin) == 0){ // если переключатель скорости работы выбран на минимальную скорость 
     interrupts();
     DimCurrent = Dimm0;
-  } else if (digitalRead(btnMaxPin) == 0){
+  } else if (digitalRead(btnMaxPin) == 0){ // максимальная скорость работы
     noInterrupts();
     digitalWrite(dimPin, HIGH);
-  } else {
+  } else { // средняя скорость работы
     interrupts();
     Dimm0 > 5 ? DimCurrent = Dimm0 - 5 : DimCurrent = 1;
   }
 
   // опрос кнопок изменения диммирования
   if (digitalRead(btnSlowlyPin) == 0){  
-    if (DimCurrent > 1) DimCurrent--;
+    if (Dimm0 > 1) {
+      Dimm0--;
+      eeprom_write_byte(0, Dimm0);
+    }
   } else if (digitalRead(btnFasterPin)){
-    if (DimCurrent < 156) DimCurrent++;
+    if (DimCurrent < 156) {
+      Dimm0++;
+      eeprom_write_byte(0, Dimm0);
+    }
   }
 }
 
