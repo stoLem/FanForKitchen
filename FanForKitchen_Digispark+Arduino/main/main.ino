@@ -7,8 +7,11 @@
 
 #include <core_timers.h>
 #include <avr/eeprom.h>
+#include "GyverButton.h"
 
 volatile uint8_t Dimm0, DimCurrent; // 1 - 156
+GButton btnSlowly(btnSlowlyPin);
+GButton btnFaster(btnFasterPin);
 
 void setup() {
   pinMode(dimPin, OUTPUT);
@@ -39,16 +42,20 @@ void loop() {
   }
 
   // опрос кнопок изменения диммирования
-  if (digitalRead(btnSlowlyPin) == 0){  
+  btnSlowly.tick();
+  btnFaster.tick();
+  
+  if (btnSlowly.isClick()) {
     if (Dimm0 > 1) {
       Dimm0--;
       eeprom_write_byte(0, Dimm0);
-    }
-  } else if (digitalRead(btnFasterPin)){
+    }    
+  }
+  if (btnFaster.isClick()) {
     if (DimCurrent < 156) {
       Dimm0++;
       eeprom_write_byte(0, Dimm0);
-    }
+    }    
   }
 }
 
