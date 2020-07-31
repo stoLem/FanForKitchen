@@ -7,11 +7,15 @@
 
 #include <core_timers.h>
 #include <avr/eeprom.h>
-#include "GyverButton.h"
+//#include "GyverButton.h"
+#include "Bounce2.h"
 
 volatile uint8_t Dimm0, DimCurrent; // 1 - 156
-GButton btnSlowly(btnSlowlyPin);
-GButton btnFaster(btnFasterPin);
+//GButton btnSlowly(btnSlowlyPin);
+//GButton btnFaster(btnFasterPin);
+
+Bounce debBtnSlowly = Bounce();
+Bounce debBtnFaster = Bounce();
 
 void setup() {
   pinMode(dimPin, OUTPUT);
@@ -19,6 +23,15 @@ void setup() {
 
   pinMode(btnSlowlyPin, INPUT_PULLUP);
   pinMode(btnFasterPin, INPUT_PULLUP);
+
+
+  // After setting up the button, setup the Bounce instance :
+  debBtnSlowly.attach(btnSlowlyPin);
+  debBtnSlowly.interval(25); // interval in ms
+  debBtnFaster.attach(btnFasterPin);
+  debBtnFaster.interval(25); // interval in ms
+
+  
   pinMode(btnMinPin, INPUT_PULLUP);
   pinMode(btnMaxPin, INPUT_PULLUP);
 
@@ -42,16 +55,21 @@ void loop() {
   }
 
   // опрос кнопок изменения диммирования
-  btnSlowly.tick();
-  btnFaster.tick();
+//  btnSlowly.tick();
+//  btnFaster.tick();
+
+  debBtnSlowly.update();
+  debBtnFaster.update();
   
-  if (btnSlowly.isClick()) {
+//  if (btnSlowly.isClick()) {
+  if (debBtnSlowly.fell()) {
     if (Dimm0 > 1) {
       Dimm0--;
       eeprom_write_byte(0, Dimm0);
     }    
   }
-  if (btnFaster.isClick()) {
+//  if (btnFaster.isClick()) {
+  if (debBtnFaster.fell()) {  
     if (DimCurrent < 156) {
       Dimm0++;
       eeprom_write_byte(0, Dimm0);
