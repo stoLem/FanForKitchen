@@ -7,38 +7,30 @@
 
 #include <core_timers.h>
 #include <avr/eeprom.h>
-//#include "GyverButton.h"
 #include "Bounce2.h"
 
 volatile uint8_t Dimm0, DimCurrent; // 1 - 156
-//GButton btnSlowly(btnSlowlyPin);
-//GButton btnFaster(btnFasterPin);
 
 Bounce debBtnSlowly = Bounce();
 Bounce debBtnFaster = Bounce();
 
 void setup() {
   pinMode(dimPin, OUTPUT);
-  digitalWrite(dimPin, LOW);
-
+  pinMode(zeroPin, INPUT);                 // настраиваем порт на вход для отслеживания прохождения сигнала через ноль
   pinMode(btnSlowlyPin, INPUT_PULLUP);
-  pinMode(btnFasterPin, INPUT_PULLUP);
-
-
-  // After setting up the button, setup the Bounce instance :
-  debBtnSlowly.attach(btnSlowlyPin);
-  debBtnSlowly.interval(25); // interval in ms
-  debBtnFaster.attach(btnFasterPin);
-  debBtnFaster.interval(25); // interval in ms
-
-  
+  pinMode(btnFasterPin, INPUT_PULLUP); 
   pinMode(btnMinPin, INPUT_PULLUP);
   pinMode(btnMaxPin, INPUT_PULLUP);
-
-  pinMode(zeroPin, INPUT);                 // настраиваем порт на вход для отслеживания прохождения сигнала через ноль
-  attachInterrupt(0, detect_up, RISING);   // настроить срабатывание прерывания на восходящий уровень
-
+   
+  // After setting up the button, setup the Bounce instance :
+  debBtnSlowly.attach(btnSlowlyPin);
+  debBtnSlowly.interval(60); // interval in ms
+  debBtnFaster.attach(btnFasterPin);
+  debBtnFaster.interval(60); // interval in ms
+  digitalWrite(dimPin, LOW);
+  
   Dimm0 = eeprom_read_byte(0);
+  attachInterrupt(0, detect_up, RISING);   // настроить срабатывание прерывания на восходящий уровень
 }
 
 void loop() {
@@ -55,20 +47,15 @@ void loop() {
   }
 
   // опрос кнопок изменения диммирования
-//  btnSlowly.tick();
-//  btnFaster.tick();
-
   debBtnSlowly.update();
   debBtnFaster.update();
   
-//  if (btnSlowly.isClick()) {
   if (debBtnSlowly.fell()) {
     if (Dimm0 > 1) {
       Dimm0--;
       eeprom_write_byte(0, Dimm0);
     }    
   }
-//  if (btnFaster.isClick()) {
   if (debBtnFaster.fell()) {  
     if (DimCurrent < 156) {
       Dimm0++;
@@ -79,8 +66,7 @@ void loop() {
 
 //----------------------ОБРАБОТЧИКИ ПРЕРЫВАНИЙ--------------------------
 void detect_up() {    // обработка внешнего прерывания на пересекание нуля снизу                                                        
-  digitalWrite(dimPin, LOW);
-  
+  digitalWrite(dimPin, LOW); 
   Timer0_SetOutputCompareMatchA(DimCurrent);        
   Timer0_EnableOutputCompareInterruptA();
   Timer0_ClockSelect(Timer0_Prescale_Value_1024);// запустить таймер
