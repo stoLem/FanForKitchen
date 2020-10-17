@@ -4,6 +4,7 @@
 #define blades 7 // количество лопастей
 #define butSlowModePin 6
 #define butFastModePin 7
+#define testPin 15
 #define periodCounter 262 // мс, время подсчета лопастей, максимально 262 мс
 #define INIT_ADDR 1023  // номер ячейки ключа первого запуска
 #define INIT_KEY 85     // ключ первого запуска. 01010101
@@ -41,9 +42,12 @@ uint32_t lastTimeClick;
 GyverPID regulator(3, 20, 1); // (kp, ki, kd, dt)
 
 void setup() {
+  //Serial.begin(115200);
+
   pinMode(butSlowModePin, INPUT_PULLUP);
   pinMode(butFastModePin, INPUT_PULLUP);
 
+  pinMode(testPin, OUTPUT);
   pinMode(bladePin, INPUT);
 
   pinMode(zeroCrossPin, INPUT);                 // настраиваем порт на вход для отслеживания прохождения сигнала через ноль
@@ -83,7 +87,6 @@ void setup() {
 }
 
 void loop() {
-  // расчёт значения диммировния
   if (!ifCountingBlades) {
     regulator.input = bladesCount;   // сообщаем регулятору текущую скорость лопастей
     dimmNullPeriod = regulator.getResult();
@@ -93,7 +96,6 @@ void loop() {
     Timer1.restart();
   }
 
-  // подсчёт скорости вращения вентилятор в лопостях
   isBladePrev = isBladeNow;
   isBladeNow = filterBlade.filtered(digitalRead(bladePin));
   if (ifCountingBlades && isBladePrev != isBladeNow) {       
@@ -163,8 +165,8 @@ void loop() {
       lastTimeClick = millis();
     }
     
-    // если в течении 15 сек не нажимались кнопки, запишем в EEPROM
-    if (millis() - lastTimeClick > 15000) { 
+    // если в течении 10 сек не нажимались кнопки, запишем в EEPROM
+    if (millis() - lastTimeClick > 10000) { 
       switch (speedMode) { // запишем в EEPROM значения скоростей SLOW, MEDIUM, FAST
         case SLOW:
           EEPROM.put(0, FAN_SPEED_SLOW);
