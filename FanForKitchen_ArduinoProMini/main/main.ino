@@ -34,15 +34,15 @@ volatile boolean ifCountingBlades; // флаг, ведётся ли подсчё
 boolean isEditMode; // флаг, что мы в режиме выставлеения скорости оборотов
 
 GMedian<5, uint8_t> filterBlade;
-GButton butSlowMode(butSlowModePin);
-GButton butFastMode(butFastModePin);
+GButton butSlowMode(butSlowModePin, HIGH_PULL);
+GButton butFastMode(butFastModePin, HIGH_PULL);
 uint32_t lastTimeClick;
 
 GyverPID regulator(3, 20, 1); // (kp, ki, kd, dt)
 
 void setup() {
-  pinMode(butSlowModePin, INPUT_PULLUP);
-  pinMode(butFastModePin, INPUT_PULLUP);
+  //pinMode(butSlowModePin, INPUT_PULLUP);
+  //pinMode(butFastModePin, INPUT_PULLUP);
 
   pinMode(bladePin, INPUT);
 
@@ -123,10 +123,22 @@ void loop() {
       lastTimeClick = millis();
       break;
   }
+  switch (butFastMode.getClicks()) { 
+    case 3:
+      BlinkRateSpeed(FAN_SPEED_SLOW);
+      break;
+    case 4:
+      BlinkRateSpeed(FAN_SPEED_MEDIUM);
+      break;
+    case 5:
+      BlinkRateSpeed(FAN_SPEED_FAST);
+      break;
+  }
+    
   if (!isEditMode) { // если мы не в режиме опроса кнопок, то обрабатываем нажатия обычным способом, иначе игнорируем
-    if (digitalRead(butSlowModePin) == 0) { // если переключатель скорости работы выбран на минимальную скорость
+    if (butSlowMode.isHold()) { // если переключатель скорости работы выбран на минимальную скорость
       SetSpeed(SLOW);
-    } else if (digitalRead(butFastModePin) == 0) { // максимальная скорость работы
+    } else if (butFastMode.isHold()) { // максимальная скорость работы
       SetSpeed(FAST);
     } else { // средняя скорость работы
       SetSpeed(MEDIUM);
@@ -175,9 +187,9 @@ void loop() {
         case FAST:
           EEPROM.put(4, FAN_SPEED_FAST);
           break;
-        isEditMode = false;
-        LedBlink(3);
       }
+      isEditMode = false;
+      LedBlink(3);      
     }
   }
 }
